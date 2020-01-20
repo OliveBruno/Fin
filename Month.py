@@ -4,7 +4,9 @@ today = date.today()
 this_month = today.strftime("%m")
 this_year = today.strftime("%Y")
 
-def get_business_days(date):
+def get_business_days(date):# takes in a month and a year on the format 
+                                #MM/YY and returns the number of business days that month
+                                    #got this from stack overflow xD
     
     month = int(date.split("/")[0])
     year = int(date.split("/")[1])
@@ -44,8 +46,16 @@ months_map = {"jan" : 1,
                "nov" : 11,
                "dec" : 12              
               }#I should probably refactor these names.. they are pretty bad tbh...
+                #also why bother being consistent with naming schemas am I right ? xP
 
-        
+"""
+Since I'm going to be adding stuff in the form (expense)/(amount),
+I decided dictionaries would be a neat way of handling everything.
+So far I am happy with this choice.
+
+"""
+    
+    
 class Month():
     def __init__(self,
                  income,
@@ -57,14 +67,14 @@ class Month():
         
         self.savings = savings
         self.non_worked_days = non_worked_days
-        self.income = income
+        self.income = income #this should be the gross income btw
         
-        if(type(month) == int and month in range(1,13)):
+        if(type(month) == int and month in range(1,13)): #gotta check if it's a valid month
             self.month = month
         elif(type(month) == str and (str(month).lower() in months_map.keys())):
             self.month = months_map[month.lower()]
         else:
-            self.month = 1
+            self.month = 1 #any weird inputs will be defaulted to january, I will default everything to january btw
             
         self.year = year
         
@@ -73,13 +83,17 @@ class Month():
         self.regularExpenses = {}
         self.expenses = {}
         
-    def update(self):
+    def update(self):# this is just a lazy way of updating a bunch of variables that are set on startup 
+                           #and then need to be changed every now and again. I just bundled them up and will
+                               #re-evaluate them all at once everytime I need to update any one of them
+                
         self.earnings["Net Income"] = self.deduct()
         self.earnings["VR"] = self.get_vr()
         self.expenses = dict(self.fixedExpenses)
         self.expenses.update(self.regularExpenses)
         
-    def addFixedExpense(self,expenses):
+    def addFixedExpense(self,expenses):# self explanatory name aside, this function can take either a dictionary
+                                        #containing (expense)/(amount) values and adds them all
         
         if(type(expenses) == dict):
             self.fixedExpenses.update(expenses)
@@ -93,6 +107,8 @@ class Month():
             name = "Unspecified " + str(counter)
                 
             self.fixedExpenses[name] = float(expenses)
+            
+            self.update()
         
     def addRegularExpense(self,expenses):
         
@@ -109,6 +125,8 @@ class Month():
                 
             self.regularExpenses[name] = float(expenses)
             
+            self.update()
+            
     def addExpense(self,expenses,mode = "regular"):
         
         if(mode in ["regular","reg"]):
@@ -116,13 +134,14 @@ class Month():
         elif(mode in ["expected","fixed"]):
             self.addFixedExpense(expenses)
 
-        self.update()
+        self.update()#just cause
         
             
     def totalDebt(self):
         
         discount = 0 #this is just an awful way of doing this,
-                        #but I am very lazy and it should work for now
+                        #but I am very lazy and it should work for now.... 
+                            #sorry can't be bothered to explain this
         
         for i in range(len(self.fixedExpenses.keys())):
             if(list(self.fixedExpenses.keys())[i] in list(self.regularExpenses.keys())):
@@ -142,7 +161,8 @@ class Month():
                 rate = 4.4,
                 timeScale = "month",
                 rateTimeScale = "year"
-               ):
+               ):# calculates how your savings can be increased if you invest it,
+                    #still don't know where this will be useful
         
         rate = rate/100
         rate = (1+rate)**((timePeriod*timeFactorMap[rateTimeScale])/timeFactorMap[timeScale])
@@ -157,12 +177,12 @@ class Month():
             incomeTax = 7.5/100,
             increment = 142.8,
             vt = True
-            ):
+            ):# in Brazil all this stuff is deducted monthly sooo....
         
         baseTaxed = (1-retirementTax)*(1-incomeTax)*self.income + increment
         
         vtTax = 0
-        non_worked_loss = 0
+        non_worked_loss = 0 # just a guess of how much you lose for not working a set amount of days
         
         if(vt):
             vtTax = 6/100
